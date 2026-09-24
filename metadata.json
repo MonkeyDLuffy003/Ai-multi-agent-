@@ -1,0 +1,7 @@
+{
+  "name": "OmniRoute AI - Multi-Agent Android Router",
+  "description": "Professional Android Jetpack Compose app featuring an intelligent multi-agent AI chat router, KeyManager key pool rotation, fallback chains, and Room database.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

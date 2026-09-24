@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">OmniRoute AI</string>
+    <string name="chat_title">OmniRoute</string>
+    <string name="settings_title">Agent &amp; Key Settings</string>
+    <string name="input_placeholder">Type a question, code snippet, or prompt…</string>
+    <string name="routing_tag">Auto Routing</string>
+    <string name="re_route_action">Answer with a different agent</string>
+</resources>
