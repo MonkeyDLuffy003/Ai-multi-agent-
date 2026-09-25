@@ -1269,75 +1269,169 @@ Intelligently classifies user queries and routes them to the best LLM API backen
 
       {/* APK Specifications & Build Guide Modal */}
       {showApkGuide && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-[#0E111B] border border-slate-700/80 rounded-2xl w-full max-w-lg p-5 shadow-2xl space-y-4 font-sans text-xs">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-[#0E111B] border border-slate-700/80 rounded-2xl w-full max-w-xl p-5 shadow-2xl space-y-4 font-sans text-xs max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">
                   APK
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-slate-100">Android APK Build Specifications</h4>
-                  <p className="text-[11px] text-slate-400 font-mono">OmniRoute AI • Production-Ready Gradle Config</p>
+                  <h4 className="font-bold text-sm text-slate-100">Build APK in GitHub Actions</h4>
+                  <p className="text-[11px] text-slate-400 font-mono">Automated CI/CD Workflow for GitHub</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowApkGuide(false)}
-                className="text-slate-400 hover:text-white px-2 py-1 rounded"
+                className="text-slate-400 hover:text-white px-2 py-1 rounded text-sm"
               >
                 ✕
               </button>
             </div>
 
-            {/* Spec Matrix */}
-            <div className="grid grid-cols-2 gap-2 font-mono text-[11px]">
-              <div className="p-2.5 rounded-lg bg-[#141826] border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">VERSION NAME</span>
-                <span className="text-emerald-400 font-bold text-xs">1.0.0</span>
+            {/* Quick Warning / Explanation based on User Screenshot */}
+            <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-800/50 text-amber-200 text-xs space-y-1">
+              <div className="font-semibold flex items-center gap-1.5 text-amber-300">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-amber-400" />
+                <span>Why your GitHub repository hasn't built the APK yet:</span>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#141826] border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">VERSION CODE</span>
-                <span className="text-cyan-400 font-bold text-xs">1</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#141826] border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">TARGET & COMPILE SDK</span>
-                <span className="text-purple-400 font-bold text-xs">API 35 (Android 15)</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#141826] border border-slate-800">
-                <span className="text-slate-500 block text-[10px]">MINIMUM SDK</span>
-                <span className="text-amber-400 font-bold text-xs">API 26 (Android 8.0+)</span>
-              </div>
-              <div className="p-2.5 rounded-lg bg-[#141826] border border-slate-800 col-span-2">
-                <span className="text-slate-500 block text-[10px]">APPLICATION ID</span>
-                <span className="text-slate-200 font-bold text-xs">com.omniroute.ai</span>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                GitHub doesn't know how to build an Android APK until you add a workflow file (<code>.github/workflows/build-apk.yml</code>). In your screenshot, GitHub Actions is waiting for you to set up this workflow.
+              </p>
+            </div>
+
+            {/* Step-by-Step Instructions */}
+            <div className="space-y-3">
+              <h5 className="font-bold text-slate-200 text-xs flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Follow these 4 steps in your GitHub screen:</span>
+              </h5>
+
+              <div className="space-y-2 text-[11px]">
+                <div className="p-2.5 rounded-lg bg-[#141826] border border-slate-800 space-y-1">
+                  <div className="font-semibold text-cyan-300 flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-cyan-950 text-cyan-400 flex items-center justify-center text-[10px] font-bold border border-cyan-800">1</span>
+                    <span>Click the link in GitHub Actions</span>
+                  </div>
+                  <p className="text-slate-400 pl-7">
+                    On your screen, right under "Get started with GitHub Actions", click: <strong className="text-cyan-400 underline">"set up a workflow yourself &rarr;"</strong>
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-[#141826] border border-slate-800 space-y-1">
+                  <div className="font-semibold text-cyan-300 flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-cyan-950 text-cyan-400 flex items-center justify-center text-[10px] font-bold border border-cyan-800">2</span>
+                    <span>Set File Name</span>
+                  </div>
+                  <p className="text-slate-400 pl-7">
+                    In the filename box at the top, name it: <code className="text-amber-300 bg-slate-900 px-1.5 py-0.5 rounded font-mono">build-apk.yml</code> (it will be saved to <code>.github/workflows/build-apk.yml</code>).
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-[#141826] border border-slate-800 space-y-1">
+                  <div className="font-semibold text-cyan-300 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-cyan-950 text-cyan-400 flex items-center justify-center text-[10px] font-bold border border-cyan-800">3</span>
+                      <span>Paste this Workflow Code</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        const workflowContent = `name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build & Publish APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: |
+          chmod +x gradlew || true
+          if [ -d "android-project" ]; then
+            chmod +x android-project/gradlew || true
+          fi
+
+      - name: Build Debug APK
+        run: |
+          if [ -f "gradlew" ]; then
+            ./gradlew assembleDebug --no-daemon --stacktrace
+          elif [ -f "android-project/gradlew" ]; then
+            cd android-project
+            ./gradlew assembleDebug --no-daemon --stacktrace
+          else
+            gradle wrapper
+            ./gradlew assembleDebug --no-daemon --stacktrace
+          fi
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniRoute-Debug-APK-v1.0.0
+          path: |
+            **/build/outputs/apk/debug/*.apk
+          retention-days: 30`;
+                        navigator.clipboard.writeText(workflowContent);
+                        setCopiedFile(true);
+                        setTimeout(() => setCopiedFile(false), 2000);
+                      }}
+                      className="px-2.5 py-1 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[10px] flex items-center gap-1 shadow-sm"
+                    >
+                      {copiedFile ? <Check className="w-3 h-3 text-black" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedFile ? 'COPIED TO CLIPBOARD!' : 'COPY WORKFLOW YAML'}</span>
+                    </button>
+                  </div>
+                  <p className="text-slate-400 pl-7 text-[10px]">
+                    Click the copy button above, select all text in GitHub editor, and paste.
+                  </p>
+                </div>
+
+                <div className="p-2.5 rounded-lg bg-[#141826] border border-slate-800 space-y-1">
+                  <div className="font-semibold text-cyan-300 flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-cyan-950 text-cyan-400 flex items-center justify-center text-[10px] font-bold border border-cyan-800">4</span>
+                    <span>Commit and Download APK</span>
+                  </div>
+                  <p className="text-slate-400 pl-7">
+                    Click the green <strong className="text-emerald-400">"Commit changes..."</strong> button. GitHub Actions will start automatically! After ~2 minutes, click into the workflow run and download your <strong className="text-white">OmniRoute-Debug-APK-v1.0.0.apk</strong> file under <em>Artifacts</em>.
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* How to Build APK Step-by-Step */}
-            <div className="space-y-2">
-              <h5 className="font-semibold text-slate-200 text-xs">How to compile the APK file:</h5>
-              <div className="p-3 rounded-lg bg-[#08090F] border border-slate-800 font-mono text-[11px] text-slate-300 space-y-2">
-                <div>
-                  <span className="text-slate-500"># 1. Download & extract project ZIP:</span>
-                  <div className="text-cyan-300">unzip OmniRouteAI-Android-Studio-Project.zip</div>
+            {/* Spec Matrix */}
+            <div className="pt-2 border-t border-slate-800">
+              <div className="text-[11px] font-semibold text-slate-300 mb-2">Build Configuration:</div>
+              <div className="grid grid-cols-3 gap-2 font-mono text-[10px]">
+                <div className="p-2 rounded bg-[#111420] border border-slate-800 text-center">
+                  <span className="text-slate-500 block">VERSION</span>
+                  <span className="text-emerald-400 font-bold">1.0.0</span>
                 </div>
-                <div>
-                  <span className="text-slate-500"># 2. Build Debug APK:</span>
-                  <div className="text-emerald-300">./gradlew assembleDebug</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">
-                    Output: <span className="text-slate-400">app/build/outputs/apk/debug/app-debug.apk</span>
-                  </div>
+                <div className="p-2 rounded bg-[#111420] border border-slate-800 text-center">
+                  <span className="text-slate-500 block">COMPILE SDK</span>
+                  <span className="text-purple-400 font-bold">API 35</span>
                 </div>
-                <div>
-                  <span className="text-slate-500"># 3. Build Release APK:</span>
-                  <div className="text-purple-300">./gradlew assembleRelease</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">
-                    Output: <span className="text-slate-400">app/build/outputs/apk/release/app-release-unsigned.apk</span>
-                  </div>
-                </div>
-                <div>
-                  <span className="text-slate-500"># 4. Install directly to connected device/emulator:</span>
-                  <div className="text-amber-300">./gradlew installDebug</div>
+                <div className="p-2 rounded bg-[#111420] border border-slate-800 text-center">
+                  <span className="text-slate-500 block">MIN SDK</span>
+                  <span className="text-amber-400 font-bold">API 26 (8.0+)</span>
                 </div>
               </div>
             </div>
@@ -1351,7 +1445,7 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Export Project ZIP</span>
+                <span>Export Project ZIP (With Workflow Included)</span>
               </button>
               <button
                 onClick={() => setShowApkGuide(false)}

@@ -9,6 +9,81 @@ export interface ProjectFile {
 
 export const ANDROID_PROJECT_FILES: ProjectFile[] = [
   {
+    path: '.github/workflows/build-apk.yml',
+    name: 'build-apk.yml',
+    language: 'groovy',
+    category: 'build',
+    description: 'GitHub Actions CI/CD workflow to automatically build and release Android APK',
+    content: `name: Build Android APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Allows manual trigger button in GitHub Actions
+
+jobs:
+  build:
+    name: Build & Publish APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant execute permission for gradlew
+        run: |
+          chmod +x gradlew || true
+          if [ -d "android-project" ]; then
+            chmod +x android-project/gradlew || true
+          fi
+
+      - name: Build Debug APK
+        run: |
+          if [ -f "gradlew" ]; then
+            ./gradlew assembleDebug --no-daemon --stacktrace
+          elif [ -f "android-project/gradlew" ]; then
+            cd android-project
+            ./gradlew assembleDebug --no-daemon --stacktrace
+          else
+            gradle wrapper
+            ./gradlew assembleDebug --no-daemon --stacktrace
+          fi
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniRoute-Debug-APK-v1.0.0
+          path: |
+            **/build/outputs/apk/debug/*.apk
+          retention-days: 30`
+  },
+  {
+    path: 'gradle/wrapper/gradle-wrapper.properties',
+    name: 'gradle-wrapper.properties',
+    language: 'properties',
+    category: 'build',
+    description: 'Configures Gradle distribution version 8.11.1 for GitHub Actions runner',
+    content: `distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+distributionUrl=https\\://services.gradle.org/distributions/gradle-8.11.1-bin.zip
+networkTimeout=10000
+validateDistributionUrl=true
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists`
+  },
+  {
     path: 'settings.gradle.kts',
     name: 'settings.gradle.kts',
     language: 'groovy',
