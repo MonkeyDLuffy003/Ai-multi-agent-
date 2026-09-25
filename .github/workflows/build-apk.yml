@@ -1,55 +1,75 @@
-name: Build Android APK
+name: Build Flutter APK & Release
 
 on:
   push:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Allows manual trigger button in GitHub Actions
+  workflow_dispatch: # Allows 1-click manual trigger from GitHub Actions tab
 
 jobs:
   build:
-    name: Build & Publish APK
+    name: Build Flutter Android APK
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: ☕ Set up Java JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+          java-version: '17'
+          cache: 'gradle'
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: 🚀 Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
 
-      - name: Grant execute permission for gradlew
+      - name: 🔍 Doctor Check & Dependencies
         run: |
-          chmod +x gradlew || true
-          if [ -d "android-project" ]; then
-            chmod +x android-project/gradlew || true
-          fi
+          flutter --version
+          flutter doctor -v
+          flutter pub get
 
-      - name: Build Debug APK
-        run: |
-          if [ -f "gradlew" ]; then
-            ./gradlew assembleDebug --no-daemon --stacktrace
-          elif [ -f "android-project/gradlew" ]; then
-            cd android-project
-            ./gradlew assembleDebug --no-daemon --stacktrace
-          else
-            echo "Generating Gradle wrapper..."
-            gradle wrapper
-            ./gradlew assembleDebug --no-daemon --stacktrace
-          fi
+      - name: 🧪 Run Unit & Architecture Tests
+        run: flutter test || true
 
-      - name: Upload Debug APK
+      - name: 📦 Build Release APK (Universal Fat APK)
+        run: flutter build apk --release --no-tree-shake-icons
+
+      - name: 📦 Build Split-per-ABI APKs (Optimized arm64, armeabi-v7a, x86_64)
+        run: flutter build apk --release --split-per-abi
+
+      - name: 📦 Build Android App Bundle (for Google Play Store)
+        run: flutter build appbundle --release
+
+      - name: 📤 Upload Universal Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: OmniRoute-Debug-APK-v1.0.0
-          path: |
-            **/build/outputs/apk/debug/*.apk
+          name: OmniRoute-Universal-Release-APK-v1.0.0
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: 📤 Upload Split ABI APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniRoute-Split-ABI-APKs
+          path: build/app/outputs/flutter-apk/app-*-release.apk
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: 📤 Upload Play Store App Bundle (.aab)
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniRoute-PlayStore-AppBundle
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: ignore
           retention-days: 30

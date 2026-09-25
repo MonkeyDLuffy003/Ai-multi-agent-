@@ -30,6 +30,7 @@ import {
   Database
 } from 'lucide-react';
 import { ANDROID_PROJECT_FILES, ProjectFile } from './androidProjectData';
+import { FLUTTER_PROJECT_FILES, FlutterProjectFile } from './flutterProjectData';
 
 interface ChatMessageItem {
   id: string;
@@ -208,8 +209,11 @@ export default function App() {
     }>
   >([]);
 
+  // Framework toggle: 'flutter' (default enterprise cross-platform) or 'kotlin' (native Jetpack Compose)
+  const [frameworkMode, setFrameworkMode] = useState<'flutter' | 'kotlin'>('flutter');
+
   // Explorer state
-  const [selectedFile, setSelectedFile] = useState<ProjectFile>(ANDROID_PROJECT_FILES[0]);
+  const [selectedFile, setSelectedFile] = useState<any>(FLUTTER_PROJECT_FILES[0]);
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedFile, setCopiedFile] = useState(false);
   const [isZipping, setIsZipping] = useState(false);
@@ -387,61 +391,55 @@ export default function App() {
     }));
   };
 
-  // Download entire Android Studio Project as .ZIP
+  // Download entire Flutter or Android Studio Project as .ZIP
   const handleDownloadZip = async () => {
     setIsZipping(true);
     try {
       const zip = new JSZip();
 
-      // Add all project files into zip with correct directory structure
-      for (const file of ANDROID_PROJECT_FILES) {
-        zip.file(file.path, file.content);
-      }
+      if (frameworkMode === 'flutter') {
+        // Add all Flutter project files into zip with correct directory structure
+        for (const file of FLUTTER_PROJECT_FILES) {
+          zip.file(file.path, file.content);
+        }
 
-      // Add standard Gradle Wrapper properties & Readme
-      zip.file(
-        'gradle/wrapper/gradle-wrapper.properties',
-        `distributionBase=GRADLE_USER_HOME
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'OmniRouteAI-Flutter-Enterprise-Project.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } else {
+        // Add all native Kotlin Jetpack Compose project files
+        for (const file of ANDROID_PROJECT_FILES) {
+          zip.file(file.path, file.content);
+        }
+
+        // Add standard Gradle Wrapper properties & Readme
+        zip.file(
+          'gradle/wrapper/gradle-wrapper.properties',
+          `distributionBase=GRADLE_USER_HOME
 distributionPath=wrapper/dists
 distributionUrl=https\\://services.gradle.org/distributions/gradle-8.11.1-bin.zip
 networkTimeout=10000
 validateDistributionUrl=true
 zipStoreBase=GRADLE_USER_HOME
 zipStorePath=wrapper/dists`
-      );
+        );
 
-      zip.file(
-        'README.md',
-        `# OmniRoute AI — Android Multi-Agent Smart Router
-
-Built with **Kotlin** and **Jetpack Compose**.
-Intelligently classifies user queries and routes them to the best LLM API backend with KeyManager key rotation pools and automatic fallback cascades.
-
-## Quick Start in Android Studio:
-1. Extract this zip archive.
-2. Open **Android Studio (Ladybug or newer)**.
-3. Select **File > Open...** and select this directory.
-4. Let Gradle sync dependencies.
-5. Run on an Android Emulator or device (\`./gradlew assembleDebug\`).
-
-## Architecture:
-- **Prompt Classifier**: Local regex heuristic scoring + lightweight LLM fallback.
-- **KeyManager**: Hardware-backed KeyStore + EncryptedSharedPreferences with automatic WorkManager cooldown sweeps.
-- **Agent Registry**: Config-driven registry supporting pluggable backends without code modifications.
-- **Fallback Chain**: Transparent cascading to secondary agents when primary experiences rate-limits or HTTP 429.
-- **Persistence**: Room Database tracking chat messages and per-agent analytics.
-`
-      );
-
-      const content = await zip.generateAsync({ type: 'blob' });
-      const url = URL.createObjectURL(content);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'OmniRouteAI-Android-Studio-Project.zip';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+        const content = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'OmniRouteAI-Android-Kotlin-Project.zip';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
     } catch (e) {
       console.error('Failed to create ZIP:', e);
     } finally {
@@ -457,8 +455,10 @@ Intelligently classifies user queries and routes them to the best LLM API backen
     }
   };
 
-  const filteredFiles = ANDROID_PROJECT_FILES.filter(
-    (f) =>
+  const currentProjectFiles = frameworkMode === 'flutter' ? FLUTTER_PROJECT_FILES : ANDROID_PROJECT_FILES;
+
+  const filteredFiles = currentProjectFiles.filter(
+    (f: any) =>
       f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.category.toLowerCase().includes(searchQuery.toLowerCase())
@@ -475,12 +475,41 @@ Intelligently classifies user queries and routes them to the best LLM API backen
           <div>
             <div className="flex items-center gap-2">
               <span className="font-bold text-base tracking-tight text-white">OmniRoute AI</span>
-              <span className="px-2 py-0.5 text-[10px] font-mono rounded bg-cyan-950 text-cyan-400 border border-cyan-800/60 font-semibold">
-                JETPACK COMPOSE + KOTLIN
-              </span>
+              <div className="flex items-center bg-[#131622] rounded-md p-0.5 border border-slate-700">
+                <button
+                  onClick={() => {
+                    setFrameworkMode('flutter');
+                    setSelectedFile(FLUTTER_PROJECT_FILES[0]);
+                  }}
+                  className={`px-2 py-0.5 text-[10px] font-mono rounded font-semibold transition-all ${
+                    frameworkMode === 'flutter'
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Cross-platform Flutter enterprise architecture"
+                >
+                  FLUTTER (DART)
+                </button>
+                <button
+                  onClick={() => {
+                    setFrameworkMode('kotlin');
+                    setSelectedFile(ANDROID_PROJECT_FILES[0]);
+                  }}
+                  className={`px-2 py-0.5 text-[10px] font-mono rounded font-semibold transition-all ${
+                    frameworkMode === 'kotlin'
+                      ? 'bg-purple-500 text-slate-950 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                  title="Native Android Kotlin & Jetpack Compose"
+                >
+                  KOTLIN (COMPOSE)
+                </button>
+              </div>
             </div>
             <p className="text-[11px] text-slate-400 hidden sm:block">
-              Multi-Agent AI Chat Router with Key Pool Rotation & Fallback Chain
+              {frameworkMode === 'flutter'
+                ? 'Production Flutter 3.29 + BLoC + Hive + Multi-Agent Failover Pipeline'
+                : 'Native Android 15 Jetpack Compose + Room + KeyStore KeyPool Architecture'}
             </p>
           </div>
         </div>
@@ -496,7 +525,7 @@ Intelligently classifies user queries and routes them to the best LLM API backen
             }`}
           >
             <Smartphone className="w-3.5 h-3.5" />
-            <span>Android Device</span>
+            <span>Mobile Device</span>
           </button>
           <button
             onClick={() => setActiveTab('explorer')}
@@ -507,7 +536,7 @@ Intelligently classifies user queries and routes them to the best LLM API backen
             }`}
           >
             <FolderTree className="w-3.5 h-3.5" />
-            <span>Project Explorer ({ANDROID_PROJECT_FILES.length})</span>
+            <span>Project Explorer ({currentProjectFiles.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('inspector')}
@@ -530,7 +559,7 @@ Intelligently classifies user queries and routes them to the best LLM API backen
             title="View APK Version & Build Instructions"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>APK v1.0.0 (API 35)</span>
+            <span>{frameworkMode === 'flutter' ? 'Flutter APK v1.0.0' : 'Kotlin APK v1.0.0'}</span>
           </button>
 
           <button
@@ -539,7 +568,7 @@ Intelligently classifies user queries and routes them to the best LLM API backen
             className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-semibold px-3.5 py-1.5 rounded-lg text-xs transition-all shadow-md shadow-emerald-500/20 active:scale-95 disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
-            <span>{isZipping ? 'Packaging...' : 'Export Android ZIP'}</span>
+            <span>{isZipping ? 'Packaging...' : frameworkMode === 'flutter' ? 'Export Flutter ZIP' : 'Export Kotlin ZIP'}</span>
           </button>
         </div>
       </header>
@@ -1027,9 +1056,9 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-300 font-mono flex items-center gap-1.5">
                     <FolderTree className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>OmniRouteAI / app</span>
+                    <span>{frameworkMode === 'flutter' ? 'OmniRoute Flutter / lib' : 'OmniRoute Kotlin / app'}</span>
                   </span>
-                  <span className="text-[10px] font-mono text-slate-500">{ANDROID_PROJECT_FILES.length} files</span>
+                  <span className="text-[10px] font-mono text-slate-500">{currentProjectFiles.length} files</span>
                 </div>
                 <div className="relative">
                   <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
@@ -1037,7 +1066,7 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search Kotlin, Gradle, Room..."
+                    placeholder={frameworkMode === 'flutter' ? 'Search Dart, BLoC, Hive, yaml...' : 'Search Kotlin, Gradle, Room...'}
                     className="w-full bg-[#131622] text-xs text-slate-200 pl-8 pr-2.5 py-1.5 rounded-md border border-slate-800 focus:outline-none focus:border-cyan-500"
                   />
                 </div>
@@ -1045,7 +1074,7 @@ Intelligently classifies user queries and routes them to the best LLM API backen
 
               {/* File List */}
               <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
-                {filteredFiles.map((file) => {
+                {filteredFiles.map((file: any) => {
                   const isSelected = selectedFile?.path === file.path;
                   return (
                     <button
@@ -1060,12 +1089,14 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                       <div className="flex items-center gap-2 truncate">
                         <Code2
                           className={`w-3.5 h-3.5 shrink-0 ${
-                            file.language === 'kotlin'
+                            file.language === 'dart'
+                              ? 'text-cyan-400'
+                              : file.language === 'kotlin'
                               ? 'text-purple-400'
                               : file.language === 'xml'
                               ? 'text-amber-400'
-                              : file.language === 'toml' || file.language === 'groovy'
-                              ? 'text-cyan-400'
+                              : file.language === 'yaml'
+                              ? 'text-emerald-400'
                               : 'text-slate-400'
                           }`}
                         />
@@ -1081,18 +1112,37 @@ Intelligently classifies user queries and routes them to the best LLM API backen
 
               {/* Bottom project summary */}
               <div className="p-3 border-t border-slate-800 bg-[#090A10] text-[11px] text-slate-400 space-y-1">
-                <div className="flex items-center justify-between font-mono">
-                  <span>Target SDK:</span>
-                  <span className="text-cyan-400">35 (Android 15)</span>
-                </div>
-                <div className="flex items-center justify-between font-mono">
-                  <span>Compose BOM:</span>
-                  <span className="text-cyan-400">2024.12.01</span>
-                </div>
-                <div className="flex items-center justify-between font-mono">
-                  <span>Architecture:</span>
-                  <span className="text-cyan-400">MVVM + Repository</span>
-                </div>
+                {frameworkMode === 'flutter' ? (
+                  <>
+                    <div className="flex items-center justify-between font-mono">
+                      <span>Flutter SDK:</span>
+                      <span className="text-cyan-400">3.29.0 (Stable)</span>
+                    </div>
+                    <div className="flex items-center justify-between font-mono">
+                      <span>Architecture:</span>
+                      <span className="text-emerald-400">Clean BLoC + Hive</span>
+                    </div>
+                    <div className="flex items-center justify-between font-mono">
+                      <span>Platforms:</span>
+                      <span className="text-cyan-400">Android & iOS Ready</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between font-mono">
+                      <span>Target SDK:</span>
+                      <span className="text-cyan-400">35 (Android 15)</span>
+                    </div>
+                    <div className="flex items-center justify-between font-mono">
+                      <span>Compose BOM:</span>
+                      <span className="text-cyan-400">2024.12.01</span>
+                    </div>
+                    <div className="flex items-center justify-between font-mono">
+                      <span>Architecture:</span>
+                      <span className="text-purple-400">MVVM + Repository</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1121,7 +1171,7 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                   {/* Code Editor Body */}
                   <div className="flex-1 overflow-auto p-4 font-mono text-xs bg-[#090A0F] text-slate-300 leading-relaxed">
                     <pre className="select-text">
-                      {selectedFile.content.split('\n').map((line, idx) => (
+                      {selectedFile.content.split('\n').map((line: string, idx: number) => (
                         <div key={idx} className="flex hover:bg-slate-900/60 py-0.5">
                           <span className="w-10 text-right pr-4 text-slate-600 select-none text-[11px]">{idx + 1}</span>
                           <span className="flex-1">{line || ' '}</span>
@@ -1146,7 +1196,11 @@ Intelligently classifies user queries and routes them to the best LLM API backen
             <div className="bg-[#0E111B] border border-slate-800 rounded-2xl p-5 shadow-xl">
               <h3 className="font-bold text-sm text-slate-100 flex items-center gap-2 mb-3">
                 <Cpu className="w-4 h-4 text-cyan-400" />
-                <span>OmniRoute AI Multi-Agent Architecture Dataflow</span>
+                <span>
+                  {frameworkMode === 'flutter'
+                    ? 'OmniRoute Flutter Enterprise Clean BLoC Pipeline'
+                    : 'OmniRoute Native Android Jetpack Compose Pipeline'}
+                </span>
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-xs font-mono">
@@ -1155,7 +1209,9 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                     <span>1. Input Stream</span>
                   </div>
                   <p className="text-[11px] text-slate-400 font-sans">
-                    Single chat input box in Jetpack Compose UI without manual model pickers.
+                    {frameworkMode === 'flutter'
+                      ? 'Reactive Flutter TextField connected to ChatBloc stream with no manual pickers.'
+                      : 'Single chat input box in Jetpack Compose UI without manual model pickers.'}
                   </p>
                 </div>
 
@@ -1182,16 +1238,20 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                     <span>4. KeyManager Pool</span>
                   </div>
                   <p className="text-[11px] text-slate-400 font-sans">
-                    Encrypted Keystore + WorkManager cooldown rotation. Detects HTTP 429 automatically.
+                    {frameworkMode === 'flutter'
+                      ? 'Encrypted Hive + FlutterSecureStorage with automatic exponential backoff cooldowns.'
+                      : 'Encrypted Keystore + WorkManager cooldown rotation. Detects HTTP 429 automatically.'}
                   </p>
                 </div>
 
                 <div className="p-3 rounded-xl bg-[#131624] border border-blue-800/40 space-y-1">
                   <div className="text-blue-400 font-bold flex items-center gap-1">
-                    <span>5. Room & UI</span>
+                    <span>5. UI & Cache</span>
                   </div>
                   <p className="text-[11px] text-slate-400 font-sans">
-                    Persists agent badge, latency, and tokens. Long-press triggers manual re-route dialog.
+                    {frameworkMode === 'flutter'
+                      ? 'Encrypted Hive box for instant offline reload + interactive diagnostics bottom sheet.'
+                      : 'Persists agent badge, latency, and tokens in Room DB. Long-press triggers manual re-route.'}
                   </p>
                 </div>
               </div>
@@ -1277,8 +1337,12 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                   APK
                 </div>
                 <div>
-                  <h4 className="font-bold text-sm text-slate-100">Build APK in GitHub Actions</h4>
-                  <p className="text-[11px] text-slate-400 font-mono">Automated CI/CD Workflow for GitHub</p>
+                  <h4 className="font-bold text-sm text-slate-100">
+                    {frameworkMode === 'flutter' ? 'Flutter Android APK CI/CD Pipeline' : 'Kotlin Android APK CI/CD Pipeline'}
+                  </h4>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    {frameworkMode === 'flutter' ? 'Automated Flutter 3.29 + Gradle 8.11 GitHub Actions Workflow' : 'Native Kotlin Compose GitHub Actions Workflow'}
+                  </p>
                 </div>
               </div>
               <button
@@ -1296,7 +1360,7 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                 <span>Why your GitHub repository hasn't built the APK yet:</span>
               </div>
               <p className="text-[11px] text-slate-300 leading-relaxed">
-                GitHub doesn't know how to build an Android APK until you add a workflow file (<code>.github/workflows/build-apk.yml</code>). In your screenshot, GitHub Actions is waiting for you to set up this workflow.
+                GitHub doesn't know how to compile Flutter/Android until you add a workflow configuration file (<code>.github/workflows/build-apk.yml</code>). In your screenshot, GitHub Actions is waiting for you to create this file.
               </p>
             </div>
 
@@ -1336,7 +1400,66 @@ Intelligently classifies user queries and routes them to the best LLM API backen
                     </div>
                     <button
                       onClick={() => {
-                        const workflowContent = `name: Build Android APK
+                        const workflowContent = frameworkMode === 'flutter'
+                          ? `name: Build Flutter APK & Release
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Flutter Android APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Release APK
+        run: flutter build apk --release --no-tree-shake-icons
+
+      - name: Build Split ABIs
+        run: flutter build apk --release --split-per-abi
+
+      - name: Build Play Store Bundle
+        run: flutter build appbundle --release
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniRoute-Universal-Release-APK-v1.0.0
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Upload Play Store Bundle (.aab)
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniRoute-PlayStore-Bundle
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30`
+                          : `name: Build Android APK
 
 on:
   push:
@@ -1390,6 +1513,7 @@ jobs:
           path: |
             **/build/outputs/apk/debug/*.apk
           retention-days: 30`;
+
                         navigator.clipboard.writeText(workflowContent);
                         setCopiedFile(true);
                         setTimeout(() => setCopiedFile(false), 2000);
@@ -1397,7 +1521,7 @@ jobs:
                       className="px-2.5 py-1 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-[10px] flex items-center gap-1 shadow-sm"
                     >
                       {copiedFile ? <Check className="w-3 h-3 text-black" /> : <Copy className="w-3 h-3" />}
-                      <span>{copiedFile ? 'COPIED TO CLIPBOARD!' : 'COPY WORKFLOW YAML'}</span>
+                      <span>{copiedFile ? 'COPIED TO CLIPBOARD!' : `COPY ${frameworkMode.toUpperCase()} WORKFLOW YAML`}</span>
                     </button>
                   </div>
                   <p className="text-slate-400 pl-7 text-[10px]">
@@ -1411,7 +1535,7 @@ jobs:
                     <span>Commit and Download APK</span>
                   </div>
                   <p className="text-slate-400 pl-7">
-                    Click the green <strong className="text-emerald-400">"Commit changes..."</strong> button. GitHub Actions will start automatically! After ~2 minutes, click into the workflow run and download your <strong className="text-white">OmniRoute-Debug-APK-v1.0.0.apk</strong> file under <em>Artifacts</em>.
+                    Click the green <strong className="text-emerald-400">"Commit changes..."</strong> button. GitHub Actions will start automatically! After ~2 minutes, click into the workflow run and download your <strong className="text-white">OmniRoute-Universal-Release-APK-v1.0.0.apk</strong> file under <em>Artifacts</em>.
                   </p>
                 </div>
               </div>
@@ -1431,7 +1555,7 @@ jobs:
                 </div>
                 <div className="p-2 rounded bg-[#111420] border border-slate-800 text-center">
                   <span className="text-slate-500 block">MIN SDK</span>
-                  <span className="text-amber-400 font-bold">API 26 (8.0+)</span>
+                  <span className="text-amber-400 font-bold">API 21 (99.4%)</span>
                 </div>
               </div>
             </div>
