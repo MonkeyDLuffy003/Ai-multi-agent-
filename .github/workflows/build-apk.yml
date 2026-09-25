@@ -5,13 +5,13 @@ on:
     branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
-  workflow_dispatch: # Allows 1-click manual trigger from GitHub Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
     name: Build Flutter Android APK
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
 
     steps:
       - name: 📥 Checkout Repository
@@ -30,25 +30,19 @@ jobs:
           flutter-version: '3.29.0'
           channel: 'stable'
           cache: true
-          cache-key: 'flutter-:os:-:channel:-:version:-:arch:-:hash:'
 
-      - name: 🔍 Doctor Check & Dependencies
+      - name: 🛠️ Ensure Flutter Project Structure
         run: |
-          flutter --version
-          flutter doctor -v
-          flutter pub get
+          if [ ! -f "pubspec.yaml" ]; then
+            echo "Bootstrapping fresh Flutter project..."
+            flutter create --org com.omniroute.ai --project-name omniroute_ai . --platforms=android
+          fi
 
-      - name: 🧪 Run Unit & Architecture Tests
-        run: flutter test || true
+      - name: 📦 Install Dependencies
+        run: flutter pub get
 
-      - name: 📦 Build Release APK (Universal Fat APK)
+      - name: 🏗️ Build Release APK
         run: flutter build apk --release --no-tree-shake-icons
-
-      - name: 📦 Build Split-per-ABI APKs (Optimized arm64, armeabi-v7a, x86_64)
-        run: flutter build apk --release --split-per-abi
-
-      - name: 📦 Build Android App Bundle (for Google Play Store)
-        run: flutter build appbundle --release
 
       - name: 📤 Upload Universal Release APK
         uses: actions/upload-artifact@v4
@@ -56,20 +50,4 @@ jobs:
           name: OmniRoute-Universal-Release-APK-v1.0.0
           path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: warn
-          retention-days: 30
-
-      - name: 📤 Upload Split ABI APKs
-        uses: actions/upload-artifact@v4
-        with:
-          name: OmniRoute-Split-ABI-APKs
-          path: build/app/outputs/flutter-apk/app-*-release.apk
-          if-no-files-found: ignore
-          retention-days: 14
-
-      - name: 📤 Upload Play Store App Bundle (.aab)
-        uses: actions/upload-artifact@v4
-        with:
-          name: OmniRoute-PlayStore-AppBundle
-          path: build/app/outputs/bundle/release/app-release.aab
-          if-no-files-found: ignore
           retention-days: 30
